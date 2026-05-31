@@ -26,6 +26,9 @@ jobs:
       - name: Abhängigkeiten installieren
         run: npm ci
 
+      - name: Tests (Datenlogik + headless UI)
+        run: npm test
+
       - name: Bauen & auf GitHub Releases veröffentlichen
         run: npm run release
         env:
