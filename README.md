@@ -121,9 +121,13 @@ Beim **ersten Start** wählst du:
    Für handelbare Assets lädt Portfolix die Kurshistorie automatisch von Yahoo.
 2. **Portfolio-Performance importieren** – bestehende `.xml` einlesen (read-only).
 
-Das eigene Portfolio wird lokal in `portfolix-portfolio.json` (im Nutzerdatenordner)
-gespeichert. Über **„+ Hinzufügen"** (oben rechts) lassen sich jederzeit Assets,
-Buchungen, Sparpläne und Konten ergänzen.
+Beim Anlegen wählst du über einen **Speichern-Dialog** selbst, wohin die
+Portfolio-Datei kommt (Vorschlag: `Dokumente\Portfolix\MeinPortfolio.portfolix.json`).
+Über **„+ Hinzufügen"** (oben rechts) lassen sich jederzeit Assets, Buchungen,
+Sparpläne und Konten ergänzen. Unten in der Seitenleiste kannst du mit **„+ Neu"**
+ein weiteres Portfolio anlegen oder mit **„Öffnen"** zwischen Portfolio-Dateien
+wechseln (praktisch für Tests). Generierte Sparplan-Buchungen werden in der jeweiligen
+Portfolio-Datei gespeichert – jedes Portfolio ist also eigenständig.
 
 ### Datenmodell bei „Neues Portfolio"
 

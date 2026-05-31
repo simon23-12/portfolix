@@ -115,6 +115,15 @@ const SavingsPlan = (() => {
         });
       }
       if (acc) {
+        // Native Sparpläne: Einzahlung in gleicher Höhe (frisches Kapital), damit
+        // Cash ausgeglichen bleibt und die Sparrate als „Eingezahlt" zählt.
+        if (b.fund) {
+          acc.transactions.push({
+            uuid: 'gend-' + bookedKey(b), date: b.date + 'T00:00', type: 'DEPOSIT',
+            amount: b.amount, shares: 0, currency: b.currency || 'EUR',
+            account: b.account, _generated: true, _plan: b.planName
+          });
+        }
         acc.transactions.push({
           uuid: 'genc-' + bookedKey(b), date: b.date + 'T00:00', type: 'BUY',
           amount: b.amount, shares: 0, currency: b.currency || 'EUR',

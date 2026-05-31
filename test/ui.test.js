@@ -27,8 +27,10 @@ HTMLCanvasElement.prototype.getContext = function(){ return { createLinearGradie
 window.portfolix = {
   getMode: async function(){ return { mode: window.__test.mode, nativeExists: !!window.__test.portfolio }; },
   setMode: async function(m){ window.__test.mode=m; window.__test.modeSet.push(m); return true; },
-  loadPortfolio: async function(){ return window.__test.portfolio; },
+  loadPortfolio: async function(){ return window.__test.portfolio ? { data: window.__test.portfolio, path: window.__test.path } : null; },
   savePortfolio: async function(d){ window.__test.portfolio=d; window.__test.saveCount=(window.__test.saveCount||0)+1; return true; },
+  savePortfolioAs: async function(p){ window.__test.portfolio=p.data; window.__test.path='C:\\\\Users\\\\simon\\\\Documents\\\\Portfolix\\\\'+(p.suggestedName||'MeinPortfolio')+'.portfolix.json'; window.__test.mode='native'; window.__test.saveAsCount=(window.__test.saveAsCount||0)+1; return { path: window.__test.path }; },
+  openPortfolio: async function(){ return window.__test.portfolio ? { data: window.__test.portfolio, path: window.__test.path } : null; },
   loadStore: async function(){ return window.__test.store; },
   saveStore: async function(s){ window.__test.store=s; return true; },
   loadXml: async function(){ return { needsFile:true }; },
@@ -121,7 +123,9 @@ async function run() {
   setF('amount', '100'); setF('interval', '1'); setF('start', '2024-01-05');
   submit(); await tick(150);
   ok(pf().plans.length === 1, 'Sparplan gespeichert');
-  ok((T.store.bookedPlanTx || []).length > 0, T.store.bookedPlanTx.length + ' fällige Sparplan-Raten automatisch gebucht');
+  const gen = allPfTx().filter(t => t._generated);
+  ok(gen.length > 0, gen.length + ' fällige Sparplan-Raten automatisch in die Portfolio-Datei gebucht');
+  ok(pf().accounts.some(a => a.transactions.some(t => t._generated)), 'Cash-Gegenbuchungen der Raten ebenfalls gespeichert');
 
   console.log('\n[6] Buchung bearbeiten');
   const buyTx = allPfTx().find(t => t.type === 'BUY' && !t._generated);
@@ -164,7 +168,26 @@ async function run() {
     ok($('#view-' + v).classList.contains('active'), 'Ansicht „' + v + '" aktiv');
   }
 
-  console.log('\n[12] Laufzeitfehler (Exceptions/Rejections im DOM)');
+  console.log('\n[12] Speicherort-Dialog beim Anlegen');
+  ok((T.saveAsCount || 0) >= 1, 'Beim Erstellen wurde der Speichern-Dialog (saveAs) aufgerufen');
+  ok(/MeinPortfolio/.test($('#dataPath').textContent), 'Portfolio-Name in Seitenleiste angezeigt: ' + $('#dataPath').textContent);
+
+  console.log('\n[13] Neues Portfolio im laufenden Betrieb');
+  win.startNewPortfolio(); await tick();
+  ok($('#typeGrid'), 'Wizard erscheint erneut für neues Portfolio');
+  const saBefore = T.saveAsCount || 0;
+  const c2 = doc.querySelector('.type-card[data-k="AKTIE"]'); if (c2) click(c2);
+  click($('#wzNext')); await tick();
+  $('#wzYear').value = '2023'; click($('#wzFinish')); await tick(440);
+  ok((T.saveAsCount || 0) === saBefore + 1, 'Speichern-Dialog für neues Portfolio aufgerufen');
+  ok(pf().securities.length === 0, 'Neues Portfolio ist leer (frisch)');
+
+  console.log('\n[14] Portfolio öffnen (Moduswechsel)');
+  await win.openPortfolioFile(); await tick(120);
+  ok($('#addBtn') && !$('#addBtn').hidden, 'Nach „Öffnen" wieder im nativen Modus');
+  ok(!$('#portfolioActions').hidden, '„+ Neu / Öffnen"-Leiste sichtbar');
+
+  console.log('\n[15] Laufzeitfehler (Exceptions/Rejections im DOM)');
   ok(errors.length === 0, errors.length === 0 ? 'Keine Laufzeitfehler' : (errors.length + ' Fehler: ' + errors.slice(0, 5).join(' | ')));
 
   console.log(`\n==== Ergebnis: ${pass} bestanden, ${fail} fehlgeschlagen ====`);

@@ -63,7 +63,7 @@ async function init() {
     const { mode, nativeExists } = await window.portfolix.getMode();
     if (mode === 'native' && nativeExists) {
       const nd = await window.portfolix.loadPortfolio();
-      if (nd) { bootNative(nd); return; }
+      if (nd && nd.data) { bootNative(nd.data, nd.path); return; }
     }
     if (mode === 'import') {
       const res = await window.portfolix.loadXml();
@@ -84,18 +84,26 @@ function bootWithXml(res) {
   finishBoot();
 }
 
-function bootNative(data) {
+function bootNative(data, path) {
   State.mode = 'native';
   State.data = data;
-  document.getElementById('dataPath').textContent = 'Eigenes Portfolio';
+  State.liveBySec = {};
+  setPortfolioName(path);
   finishBoot();
+}
+function setPortfolioName(p) {
+  const name = p ? String(p).split(/[\\/]/).pop().replace(/\.portfolix\.json$|\.json$/i, '') : 'Eigenes Portfolio';
+  document.getElementById('dataPath').textContent = name;
 }
 
 function finishBoot() {
   const native = State.mode === 'native';
   document.getElementById('addBtn').hidden = !native;
   document.getElementById('txAddBtn').hidden = !native;
-  SavingsPlan.merge(State.data, State.store);
+  document.getElementById('portfolioActions').hidden = false;
+  // Import (PP): generierte Sparplan-Buchungen aus dem globalen Store mischen.
+  // Native: generierte Buchungen liegen bereits in der Portfolio-Datei.
+  if (!native) SavingsPlan.merge(State.data, State.store);
   recompute();
   renderAll();
   document.getElementById('loading').style.display = 'none';
@@ -104,11 +112,22 @@ function finishBoot() {
 
 async function persistData() {
   if (State.mode !== 'native') return;
-  // generierte Sparplan-Buchungen liegen im Store und werden beim Laden gemischt
-  const clone = Builder.serializable(State.data);
-  for (const pf of clone.portfolios) pf.transactions = pf.transactions.filter(t => !t._generated);
-  for (const a of clone.accounts) a.transactions = a.transactions.filter(t => !t._generated);
-  await window.portfolix.savePortfolio(clone);
+  await window.portfolix.savePortfolio(Builder.serializable(State.data));
+}
+
+function startNewPortfolio() {
+  if (!window.confirm('Neues Portfolio anlegen?\n\nDein aktuelles Portfolio bleibt als Datei gespeichert und kann jederzeit wieder geöffnet werden.')) return;
+  closeModal();
+  wizardState.types = new Set(); wizardState.start = '';
+  document.getElementById('loading').style.display = 'grid';
+  wizardStep1();
+}
+async function openPortfolioFile() {
+  const r = await window.portfolix.openPortfolio();
+  if (!r) return;
+  if (r.error) { toast('Konnte Portfolio nicht öffnen: ' + r.error, 'err'); return; }
+  closeModal();
+  bootNative(r.data, r.path);
 }
 
 /* ----------------------------- Onboarding / Wizard ----------------------------- */
@@ -205,11 +224,13 @@ function wizardStep2() {
     const data = Builder.createPortfolio({ startDate: wizardState.start, assetTypes: [...wizardState.types] });
     // Tagesgeld-Konto anlegen, falls gewählt
     if (wizardState.types.has('TAGESGELD')) Builder.addAccount(data, { name: 'Tagesgeld', currency: 'EUR', kind: 'TAGESGELD' });
-    await window.portfolix.setMode('native');
+    // Speicherort wählen lassen
+    const saved = await window.portfolix.savePortfolioAs({ data: Builder.serializable(data), suggestedName: 'MeinPortfolio' });
     State.mode = 'native';
     State.data = data;
-    await persistData();
-    document.getElementById('dataPath').textContent = 'Eigenes Portfolio';
+    State.liveBySec = {};
+    if (saved) { setPortfolioName(saved.path); }
+    else { await window.portfolix.setMode('native'); await window.portfolix.savePortfolio(Builder.serializable(data)); setPortfolioName(null); }
     finishBoot();
     setTimeout(() => { switchView('securities'); toast('Portfolio erstellt – füge jetzt dein erstes Asset hinzu', 'ok'); }, 300);
   });
@@ -372,7 +393,21 @@ function priceLookupEUR(secUuid, day) {
   return null;
 }
 
+function collectGenerated(data) {
+  const out = [];
+  for (const pf of data.portfolios) for (const t of pf.transactions) if (t._generated && t._plan) out.push({ planName: t._plan, date: (t.date || '').slice(0, 10) });
+  return out;
+}
 function autoBookDuePlans() {
+  if (State.mode === 'native') {
+    // Dedup gegen bereits in der Portfolio-Datei gespeicherte generierte Buchungen
+    const synthetic = { bookedPlanTx: collectGenerated(State.data) };
+    const due = SavingsPlan.findDue(State.data, State.data.plans, synthetic, priceLookupEUR);
+    if (!due.length) return 0;
+    due.forEach(d => d.fund = true);   // Sparrate zählt als frisches Kapital
+    SavingsPlan.applyRecords(State.data, due);
+    return due.length;
+  }
   const due = SavingsPlan.findDue(State.data, State.data.plans, State.store, priceLookupEUR);
   if (!due.length) return 0;
   State.store.bookedPlanTx.push(...due);
@@ -1069,6 +1104,8 @@ addMenuEl.querySelectorAll('[data-add]').forEach(it => it.addEventListener('clic
 document.addEventListener('click', (e) => { if (!addMenuEl.hidden && !addMenuEl.contains(e.target) && e.target !== addBtnEl) addMenuEl.hidden = true; });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); addMenuEl.hidden = true; } });
 
+document.getElementById('newPortfolioBtn').addEventListener('click', startNewPortfolio);
+document.getElementById('openPortfolioBtn').addEventListener('click', openPortfolioFile);
 document.getElementById('updateInstall').addEventListener('click', () => window.portfolix.installUpdate());
 document.getElementById('updateDismiss').addEventListener('click', () => { document.getElementById('updateBar').hidden = true; });
 document.getElementById('changeFile').addEventListener('click', async (e) => {

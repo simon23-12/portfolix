@@ -26,9 +26,13 @@
 
     <button class="refresh-btn" id="refreshBtn"><span class="ico">⟳</span> Kurse aktualisieren</button>
     <div class="side-foot">
-      <div id="lastUpdate">Noch nicht aktualisiert</div>
+      <div id="portfolioActions" hidden style="display:flex;gap:7px;margin-bottom:10px">
+        <button class="btn sm" id="newPortfolioBtn" style="flex:1" title="Neues Portfolio anlegen">+ Neu</button>
+        <button class="btn sm" id="openPortfolioBtn" style="flex:1" title="Portfolio-Datei öffnen">Öffnen</button>
+      </div>
       <div class="path" id="dataPath"></div>
-      <div style="margin-top:6px"><a href="#" id="changeFile" style="color:var(--accent); text-decoration:none">Andere Datei…</a></div>
+      <div id="lastUpdate" style="margin-top:4px">Noch nicht aktualisiert</div>
+      <div style="margin-top:6px"><a href="#" id="changeFile" style="color:var(--text-faint); text-decoration:none">Portfolio-Performance-XML importieren…</a></div>
       <div style="margin-top:8px;opacity:.7" id="appVersion"></div>
     </div>
   </aside>

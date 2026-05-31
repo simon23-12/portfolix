@@ -145,9 +145,21 @@ ipcMain.handle('app:paths', async () => {
 
 /* ----------------------- Modus & natives Portfolio ------------------------ */
 
+function currentPortfolioPath() {
+  const cfg = readConfig();
+  if (cfg.portfolioPath && fs.existsSync(cfg.portfolioPath)) return cfg.portfolioPath;
+  if (fs.existsSync(PORTFOLIO_FILE)) return PORTFOLIO_FILE; // Altbestand
+  return null;
+}
+function defaultPortfolioDir() {
+  const d = path.join(app.getPath('documents'), 'Portfolix');
+  try { fs.mkdirSync(d, { recursive: true }); } catch { /* egal */ }
+  return d;
+}
+
 ipcMain.handle('app:getMode', async () => {
   const cfg = readConfig();
-  return { mode: cfg.mode || null, nativeExists: fs.existsSync(PORTFOLIO_FILE) };
+  return { mode: cfg.mode || null, nativeExists: !!currentPortfolioPath() };
 });
 
 ipcMain.handle('app:setMode', async (_e, mode) => {
@@ -158,13 +170,50 @@ ipcMain.handle('app:setMode', async (_e, mode) => {
 });
 
 ipcMain.handle('portfolio:load', async () => {
-  try { return JSON.parse(fs.readFileSync(PORTFOLIO_FILE, 'utf8')); }
+  const p = currentPortfolioPath();
+  if (!p) return null;
+  try { return { data: JSON.parse(fs.readFileSync(p, 'utf8')), path: p }; }
   catch { return null; }
 });
 
 ipcMain.handle('portfolio:save', async (_e, data) => {
-  fs.writeFileSync(PORTFOLIO_FILE, JSON.stringify(data), 'utf8');
+  const cfg = readConfig();
+  const p = (cfg.portfolioPath && cfg.portfolioPath) || PORTFOLIO_FILE;
+  fs.writeFileSync(p, JSON.stringify(data), 'utf8');
+  if (!cfg.portfolioPath) { cfg.portfolioPath = p; writeConfig(cfg); }
   return true;
+});
+
+ipcMain.handle('portfolio:saveAs', async (_e, { data, suggestedName }) => {
+  const safe = String(suggestedName || 'MeinPortfolio').replace(/[^\wäöüÄÖÜß \-]/g, '').trim() || 'MeinPortfolio';
+  const res = await dialog.showSaveDialog(mainWindow, {
+    title: 'Neues Portfolio speichern',
+    defaultPath: path.join(defaultPortfolioDir(), safe + '.portfolix.json'),
+    filters: [{ name: 'Portfolix-Portfolio', extensions: ['json'] }]
+  });
+  if (res.canceled || !res.filePath) return null;
+  fs.writeFileSync(res.filePath, JSON.stringify(data || {}), 'utf8');
+  const cfg = readConfig();
+  cfg.portfolioPath = res.filePath; cfg.mode = 'native';
+  writeConfig(cfg);
+  return { path: res.filePath };
+});
+
+ipcMain.handle('portfolio:open', async () => {
+  const res = await dialog.showOpenDialog(mainWindow, {
+    title: 'Portfolio öffnen',
+    defaultPath: defaultPortfolioDir(),
+    filters: [{ name: 'Portfolix-Portfolio', extensions: ['json'] }],
+    properties: ['openFile']
+  });
+  if (res.canceled || !res.filePaths.length) return null;
+  const p = res.filePaths[0];
+  try {
+    const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (!data || !Array.isArray(data.securities) || !Array.isArray(data.accounts)) return { error: 'Keine gültige Portfolix-Datei.' };
+    const cfg = readConfig(); cfg.portfolioPath = p; cfg.mode = 'native'; writeConfig(cfg);
+    return { data, path: p };
+  } catch (e) { return { error: String(e && e.message || e) }; }
 });
 
 ipcMain.handle('app:openExternal', async (_e, url) => {

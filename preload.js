@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('portfolix', {
   setMode: (mode) => ipcRenderer.invoke('app:setMode', mode),
   loadPortfolio: () => ipcRenderer.invoke('portfolio:load'),
   savePortfolio: (data) => ipcRenderer.invoke('portfolio:save', data),
+  savePortfolioAs: (payload) => ipcRenderer.invoke('portfolio:saveAs', payload),
+  openPortfolio: () => ipcRenderer.invoke('portfolio:open'),
   paths: () => ipcRenderer.invoke('app:paths'),
   openExternal: (url) => ipcRenderer.invoke('app:openExternal', url),
   fetchQuotes: (symbols) => ipcRenderer.invoke('quotes:fetch', symbols),
