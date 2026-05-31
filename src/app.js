@@ -762,20 +762,22 @@ function modalAddAsset() {
       <button type="submit" class="btn primary">Anlegen &amp; Buchung erfassen</button>
     </div>`, {
     onReady(form) {
+      const E = form.elements;
       const sync = () => {
-        const t = form.type.value;
+        const t = E.type.value;
         const tradeable = Builder.isTradeable(t);
         form.querySelector('#symField').style.display = tradeable ? '' : 'none';
         form.querySelector('#manualHint').style.display = tradeable ? 'none' : '';
         form.querySelector('#symHint').textContent = (Builder.TYPE[t] && Builder.TYPE[t].hintSymbol) || '';
       };
-      form.type.addEventListener('change', sync); sync();
+      E.type.addEventListener('change', sync); sync();
     },
     onSubmit(form) {
-      const type = form.type.value;
-      const sec = Builder.addSecurity(State.data, { name: form.elements['name'].value, type, isin: form.isin.value, currency: form.currency.value.trim() || 'EUR' });
-      if (Builder.isTradeable(type) && form.symbol.value.trim()) {
-        State.store.symbolOverrides[sec.uuid] = form.symbol.value.trim();
+      const E = form.elements;
+      const type = E.type.value;
+      const sec = Builder.addSecurity(State.data, { name: E['name'].value, type, isin: E.isin.value, currency: E.currency.value.trim() || 'EUR' });
+      if (Builder.isTradeable(type) && E.symbol.value.trim()) {
+        State.store.symbolOverrides[sec.uuid] = E.symbol.value.trim();
         window.portfolix.saveStore(State.store);
       }
       closeModal();
@@ -867,37 +869,39 @@ function txFields(kind, preSec) {
 function wireCalc(form, kind) {
   if (kind !== 'BUY' && kind !== 'SELL') return;
   const calc = form.querySelector('#calc'); if (!calc) return;
+  const E = form.elements;
   const upd = () => {
-    const sh = pNum(form.shares.value), pr = pNum(form.price.value), fee = pNum(form.fee.value);
+    const sh = pNum(E.shares.value), pr = pNum(E.price.value), fee = pNum(E.fee.value);
     const gross = sh * pr;
     const total = kind === 'BUY' ? gross + fee : gross - fee;
     calc.textContent = `${kind === 'BUY' ? 'Kaufsumme' : 'Erlös'}: ${nf.format(total)} €  (${nf.format(gross)} € ${kind === 'BUY' ? '+' : '−'} ${nf.format(fee)} € Gebühr)`;
   };
-  ['shares', 'price', 'fee'].forEach(n => form[n] && form[n].addEventListener('input', upd)); upd();
+  ['shares', 'price', 'fee'].forEach(n => E[n] && E[n].addEventListener('input', upd)); upd();
 }
 
 function submitTx(form, kind) {
-  const date = form.date ? form.date.value : todayStr();
+  const E = form.elements;
+  const date = E.date ? E.date.value : todayStr();
   try {
     if (kind === 'BUY' || kind === 'SELL') {
-      const secUuid = form.sec.value;
-      const shares = pNum(form.shares.value), price = pNum(form.price.value), fee = pNum(form.fee.value);
+      const secUuid = E.sec.value;
+      const shares = pNum(E.shares.value), price = pNum(E.price.value), fee = pNum(E.fee.value);
       if (!secUuid || shares <= 0 || price < 0) { toast('Bitte Asset, Stückzahl und Kurs angeben', 'err'); return; }
       Builder.addTrade(State.data, { secUuid, kind, date, shares, price, fee,
-        portfolioUuid: form.pf ? form.pf.value : null,
-        fundWithDeposit: form.fund ? form.fund.checked : false });
+        portfolioUuid: E.pf ? E.pf.value : null,
+        fundWithDeposit: E.fund ? E.fund.checked : false });
     } else if (kind === 'DIVIDENDS') {
-      const secUuid = form.sec.value; const amount = pNum(form.amount.value);
+      const secUuid = E.sec.value; const amount = pNum(E.amount.value);
       const sec = State.data.securities.find(s => s.uuid === secUuid);
-      Builder.addCashTx(State.data, form.acc.value, { type: 'DIVIDENDS', date, amount, security: secUuid, securityName: sec ? sec.name : null });
+      Builder.addCashTx(State.data, E.acc.value, { type: 'DIVIDENDS', date, amount, security: secUuid, securityName: sec ? sec.name : null });
     } else if (kind === 'VALUE') {
-      const secUuid = form.sec.value; const amount = pNum(form.amount.value);
+      const secUuid = E.sec.value; const amount = pNum(E.amount.value);
       if (!secUuid) { toast('Kein manuelles Asset vorhanden', 'err'); return; }
       Builder.setManualValue(State.data, secUuid, date, amount);
     } else { // DEPOSIT / REMOVAL / INTEREST
-      const amount = pNum(form.amount.value);
+      const amount = pNum(E.amount.value);
       if (amount <= 0) { toast('Bitte einen Betrag angeben', 'err'); return; }
-      Builder.addCashTx(State.data, form.acc.value, { type: kind, date, amount });
+      Builder.addCashTx(State.data, E.acc.value, { type: kind, date, amount });
     }
   } catch (e) { toast('Fehler: ' + (e.message || e), 'err'); return; }
   // beim Bearbeiten: alte Buchung(en) entfernen (neue haben eigene IDs)
@@ -967,11 +971,12 @@ function modalAddPlan() {
       <button type="submit" class="btn primary">Sparplan anlegen</button>
     </div>`, {
     onSubmit(form) {
-      const amount = pNum(form.amount.value);
+      const E = form.elements;
+      const amount = pNum(E.amount.value);
       if (amount <= 0) { toast('Bitte eine Sparrate angeben', 'err'); return; }
       Builder.addPlan(State.data, {
-        secUuid: form.sec.value, amount, fees: pNum(form.fees.value),
-        interval: Number(form.interval.value), start: form.start.value, autoGenerate: form.auto.checked
+        secUuid: E.sec.value, amount, fees: pNum(E.fees.value),
+        interval: Number(E.interval.value), start: E.start.value, autoGenerate: E.auto.checked
       });
       closeModal(); toast('Sparplan angelegt', 'ok'); afterEdit({ refresh: true });
     }
@@ -991,7 +996,8 @@ function modalAddAccount() {
       <button type="submit" class="btn primary">Konto anlegen</button>
     </div>`, {
     onSubmit(form) {
-      Builder.addAccount(State.data, { name: form.elements['name'].value, currency: form.currency.value.trim() || 'EUR', kind: form.kind.value });
+      const E = form.elements;
+      Builder.addAccount(State.data, { name: E['name'].value, currency: E.currency.value.trim() || 'EUR', kind: E.kind.value });
       closeModal(); toast('Konto angelegt', 'ok'); afterEdit();
     }
   });

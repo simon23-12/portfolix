@@ -137,7 +137,7 @@ const Builder = (() => {
       name: (name || (sec ? sec.name : 'Sparplan')).trim(), security: secUuid, securityName: sec ? sec.name : null,
       portfolio: pf ? pf.uuid : null, account: accUuid, autoGenerate: !!autoGenerate,
       start: stamp(start), interval: Math.max(1, interval), amount: round2(amount), fees: round2(fees), taxes: 0,
-      type: 'PURCHASE_OR_DELIVERY'
+      type: 'PURCHASE_OR_DELIVERY', backfill: true
     };
     data.plans.push(plan);
     return plan;

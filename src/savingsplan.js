@@ -66,7 +66,9 @@ const SavingsPlan = (() => {
     for (const plan of plans) {
       if (!plan.autoGenerate) continue;
       if (!plan.security || !plan.portfolio || !plan.account) continue;
-      const lastReal = lastRealExecution(data, plan);
+      // Native Pläne (backfill) füllen ab Start auf – unabhängig von manuellen Käufen.
+      // Import-Pläne (PP) starten nach der letzten echten Ausführung, um Dubletten zu vermeiden.
+      const lastReal = plan.backfill ? null : lastRealExecution(data, plan);
       const dates = scheduledDates(plan, today);
       for (const day of dates) {
         if (lastReal && day <= lastReal) continue;       // bereits real ausgeführt

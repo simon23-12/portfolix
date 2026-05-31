@@ -13,7 +13,8 @@
     "start": "electron .",
     "dist": "electron-builder --win",
     "release": "electron-builder --win --publish always",
-    "test": "node test/integration.js"
+    "test": "node test/builder.test.js && node test/ui.test.js",
+    "test:live": "node test/yahoo.test.js"
   },
   "build": {
     "appId": "de.simon.portfolix",
@@ -51,6 +52,7 @@
     "@xmldom/xmldom": "^0.9.0",
     "electron": "^31.0.0",
     "electron-builder": "^24.13.3",
+    "jsdom": "^29.0.0",
     "xpath": "^0.0.34"
   },
   "dependencies": {
