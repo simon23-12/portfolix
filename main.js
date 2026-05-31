@@ -8,6 +8,7 @@ const { autoUpdater } = require('electron-updater');
 const DEFAULT_XML = path.join(__dirname, 'MyInvestments.xml');
 const STORE_FILE = path.join(app.getPath('userData'), 'portfolix-store.json');
 const CONFIG_FILE = path.join(app.getPath('userData'), 'portfolix-config.json');
+const PORTFOLIO_FILE = path.join(app.getPath('userData'), 'portfolix-portfolio.json');
 
 let mainWindow = null;
 
@@ -140,6 +141,30 @@ ipcMain.handle('store:save', async (_e, store) => {
 
 ipcMain.handle('app:paths', async () => {
   return { store: STORE_FILE, config: CONFIG_FILE, xml: readConfig().xmlPath || DEFAULT_XML };
+});
+
+/* ----------------------- Modus & natives Portfolio ------------------------ */
+
+ipcMain.handle('app:getMode', async () => {
+  const cfg = readConfig();
+  return { mode: cfg.mode || null, nativeExists: fs.existsSync(PORTFOLIO_FILE) };
+});
+
+ipcMain.handle('app:setMode', async (_e, mode) => {
+  const cfg = readConfig();
+  cfg.mode = mode;
+  writeConfig(cfg);
+  return true;
+});
+
+ipcMain.handle('portfolio:load', async () => {
+  try { return JSON.parse(fs.readFileSync(PORTFOLIO_FILE, 'utf8')); }
+  catch { return null; }
+});
+
+ipcMain.handle('portfolio:save', async (_e, data) => {
+  fs.writeFileSync(PORTFOLIO_FILE, JSON.stringify(data), 'utf8');
+  return true;
 });
 
 ipcMain.handle('app:openExternal', async (_e, url) => {

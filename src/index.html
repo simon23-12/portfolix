@@ -47,7 +47,16 @@
         <h1 id="pageTitle">Dashboard</h1>
         <div class="sub" id="pageSub">Überblick über dein Gesamtvermögen</div>
       </div>
-      <div style="display:flex;align-items:center;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="position:relative">
+          <button class="btn sm primary" id="addBtn" hidden>+ Hinzufügen</button>
+          <div class="add-menu" id="addMenu" hidden>
+            <div data-add="asset"><span>◆</span> Asset / Wertpapier</div>
+            <div data-add="tx"><span>≡</span> Buchung (Kauf, Dividende …)</div>
+            <div data-add="plan"><span>↻</span> Sparplan</div>
+            <div data-add="account"><span>▤</span> Konto</div>
+          </div>
+        </div>
         <button class="btn sm" id="privacyToggle" title="Beträge für Screenshots verbergen (Strg+H)"><span id="privacyIco">🙈</span> <span id="privacyLbl">Zahlen verbergen</span></button>
         <div class="live-dot" id="liveDot"><b></b> <span>Kurse: lokal gespeichert</span></div>
       </div>
@@ -102,6 +111,8 @@
           <select id="txType"><option value="">Alle Typen</option></select>
           <select id="txScope"><option value="">Konten &amp; Depots</option><option value="Depot">Nur Depot</option><option value="Konto">Nur Konto</option></select>
           <span class="muted" id="txCount"></span>
+          <span style="flex:1"></span>
+          <button class="btn sm primary" id="txAddBtn" hidden onclick="openAdd('tx')">+ Buchung</button>
         </div>
         <div class="panel" style="padding:6px 8px"><div id="txTable"></div></div>
       </section>
@@ -122,11 +133,13 @@
   </main>
 
   <div id="toast"></div>
+  <div id="modalRoot"></div>
 
   <script src="vendor/chart.umd.js"></script>
   <script src="ppparser.js"></script>
   <script src="model.js"></script>
   <script src="savingsplan.js"></script>
+  <script src="builder.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

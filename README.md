@@ -111,6 +111,28 @@ Erzeugt den Installer unter `dist/` zum manuellen Weitergeben.
   `build/icon.ico` (256×256) an und ergänze in `package.json` unter `build.win`
   die Zeile `"icon": "build/icon.ico"`.
 
+## Zwei Wege zu starten
+
+Beim **ersten Start** wählst du:
+
+1. **Neues Portfolio anlegen** – komplett bei Null. Du wählst deine Anlageklassen
+   (Aktien, ETFs, Krypto inкл. NFTs, Tagesgeld, Immobilien) und ab wann du investierst,
+   und trägst dann deine Käufe/Verkäufe/Dividenden manuell oder per Sparplan ein.
+   Für handelbare Assets lädt Portfolix die Kurshistorie automatisch von Yahoo.
+2. **Portfolio-Performance importieren** – bestehende `.xml` einlesen (read-only).
+
+Das eigene Portfolio wird lokal in `portfolix-portfolio.json` (im Nutzerdatenordner)
+gespeichert. Über **„+ Hinzufügen"** (oben rechts) lassen sich jederzeit Assets,
+Buchungen, Sparpläne und Konten ergänzen.
+
+### Datenmodell bei „Neues Portfolio"
+
+- Ein **Kauf** bucht standardmäßig zusätzlich eine **Einzahlung** in gleicher Höhe
+  (= frisches Kapital), damit „Eingezahlt" und „Gesamtvermögen" stimmen. Wer Erlöse
+  reinvestiert, entfernt den Haken „Betrag frisch eingezahlt".
+- **Manuelle Assets** (Immobilie, NFT, Sonstiges) werden ohne Live-Kurs geführt;
+  ihren aktuellen Wert pflegst du über die Buchung **„Wertanpassung"**.
+
 ## Funktionen
 
 - **Dashboard** – Gesamtvermögen, Gewinn/Verlust, eingezahltes Kapital, Dividenden,
@@ -174,6 +196,7 @@ holt den passenden Kurs und legt automatisch eine **Kauf-Buchung** an
 | `src/ppparser.js` | Portfolio-Performance-XML-Parser (löst XStream-`reference`-Verweise via XPath auf) |
 | `src/model.js` | Berechnungen: Bestände, G/V, Cash, Wertkurve, FX, Yahoo-Symbol-Mapping |
 | `src/savingsplan.js` | Sparplan-Engine (Fälligkeit, Auto-Buchung) |
+| `src/builder.js` | Erstellt/bearbeitet ein natives Portfolio (ohne PP-XML) |
 | `src/app.js` | UI-Steuerung & Rendering |
 | `src/index.html`, `src/styles.css` | Oberfläche |
 | `test/verify.js`, `test/integration.js` | Headless-Prüfung der Parser-/Rechenlogik (`node test/integration.js`) |
