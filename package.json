@@ -1,6 +1,6 @@
 {
   "name": "portfolix",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Portfolix – Investment-Tracker für Portfolio-Performance-Daten mit Echtzeitkursen und automatischen Sparplänen",
   "main": "main.js",
   "author": "Simon",
