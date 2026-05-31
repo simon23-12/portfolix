@@ -1,0 +1,60 @@
+{
+  "name": "portfolix",
+  "version": "1.0.0",
+  "description": "Portfolix – Investment-Tracker für Portfolio-Performance-Daten mit Echtzeitkursen und automatischen Sparplänen",
+  "main": "main.js",
+  "author": "Simon",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/simon23-12/portfolix.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "release": "electron-builder --win --publish always",
+    "test": "node test/integration.js"
+  },
+  "build": {
+    "appId": "de.simon.portfolix",
+    "productName": "Portfolix",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "package.json",
+      "!MyInvestments.xml",
+      "!test/**/*",
+      "!dist/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": false,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Portfolix-Setup.exe"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "simon23-12",
+        "repo": "portfolix",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@xmldom/xmldom": "^0.9.0",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "xpath": "^0.0.34"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.0",
+    "electron-updater": "^6.8.3"
+  }
+}

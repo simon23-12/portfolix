@@ -1,0 +1,32 @@
+name: Release
+
+# Baut Portfolix für Windows und veröffentlicht den Installer als GitHub-Release,
+# sobald ein Tag wie v1.0.1 gepusht wird. Die Freunde-Apps aktualisieren sich
+# danach automatisch über electron-updater.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write   # nötig, damit das Release angelegt werden darf
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Bauen & auf GitHub Releases veröffentlichen
+        run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Portfolix — Dein Depot. Endlich klar.</title>
+<meta name="description" content="Portfolix ist ein Windows-Programm, das deine Portfolio-Performance-Daten auswertet: alle Trades, Bestände und Konten – mit Echtzeitkursen und automatischen Sparplänen." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d12; --bg2:#0c0f14; --panel:#11161e; --panel2:#141922; --elev:#1b212c;
+  --line:#222a36; --line-soft:#1a212b;
+  --text:#eaf0f7; --dim:#9aa6b8; --faint:#5d6878;
+  --accent:#5b8def; --accent2:#7c5cff; --up:#34d399; --down:#f87171; --warn:#fbbf24;
+  --grad:linear-gradient(135deg,var(--accent),var(--accent2));
+  --display:'Bricolage Grotesque',sans-serif; --sans:'Hanken Grotesk',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans); background:var(--bg); color:var(--text);
+  -webkit-font-smoothing:antialiased; overflow-x:hidden; line-height:1.55;
+}
+/* Atmosphäre: Gradient-Glow + feines Korn */
+body::before{
+  content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
+  background:
+    radial-gradient(60% 50% at 18% 0%, rgba(91,141,239,.20), transparent 60%),
+    radial-gradient(55% 50% at 92% 8%, rgba(124,92,255,.18), transparent 60%),
+    radial-gradient(40% 40% at 50% 100%, rgba(52,211,153,.06), transparent 70%);
+}
+body::after{
+  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.mono{font-family:var(--mono)}
+.up{color:var(--up)} .down{color:var(--down)}
+
+/* ---------- Nav ---------- */
+nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+  background:rgba(10,13,18,.7);border-bottom:1px solid var(--line-soft)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:66px}
+.brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.02em}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:var(--grad);display:grid;place-items:center;
+  font-weight:800;color:#fff;box-shadow:0 6px 18px rgba(91,141,239,.45)}
+.nav-links{display:flex;align-items:center;gap:30px;font-size:14.5px;color:var(--dim);font-weight:500}
+.nav-links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:9px;font-family:var(--sans);font-weight:600;font-size:15px;
+  padding:12px 20px;border-radius:11px;cursor:pointer;border:1px solid transparent;transition:.18s;white-space:nowrap}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 8px 24px -6px rgba(91,141,239,.55)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 32px -6px rgba(124,92,255,.6)}
+.btn-ghost{border-color:var(--line);color:var(--text);background:rgba(255,255,255,.02)}
+.btn-ghost:hover{border-color:var(--accent);background:rgba(91,141,239,.08)}
+.btn.sm{padding:9px 16px;font-size:14px}
+.nav-links .btn{color:#fff}
+
+/* ---------- Hero ---------- */
+header{padding:78px 0 30px;text-align:center;position:relative}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--dim);
+  border:1px solid var(--line);background:rgba(255,255,255,.02);padding:7px 15px;border-radius:100px;margin-bottom:28px}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--up);box-shadow:0 0 10px var(--up)}
+h1{font-family:var(--display);font-weight:700;letter-spacing:-.035em;line-height:1.02;
+  font-size:clamp(40px,7vw,82px);margin-bottom:24px}
+h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:clamp(17px,2.2vw,21px);color:var(--dim);max-width:640px;margin:0 auto 36px;font-weight:400}
+.cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center}
+.trust{margin-top:22px;font-size:13.5px;color:var(--faint);display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+.trust b{color:var(--dim);font-weight:600}
+.dlmeta{font-size:13px;color:var(--faint);margin-top:10px}
+
+.reveal{opacity:0;transform:translateY(22px);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.25s}.d4{animation-delay:.35s}.d5{animation-delay:.5s}
+
+/* ---------- Windows-Fenster-Mockup ---------- */
+.showcase{margin:54px auto 0;max-width:1080px;position:relative}
+.showcase::before{content:"";position:absolute;inset:-8% -4% 0;z-index:-1;
+  background:radial-gradient(50% 60% at 50% 30%,rgba(124,92,255,.28),transparent 70%);filter:blur(20px)}
+.win{border-radius:14px;overflow:hidden;border:1px solid var(--line);
+  box-shadow:0 40px 100px -30px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.03) inset;
+  background:var(--bg2);animation:float 7s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.titlebar{height:40px;background:linear-gradient(180deg,#161b24,#0f141b);display:flex;align-items:center;
+  justify-content:space-between;padding:0 8px 0 14px;border-bottom:1px solid var(--line-soft)}
+.tb-left{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--dim);font-weight:600}
+.tb-left .mini{width:16px;height:16px;border-radius:5px;background:var(--grad);display:grid;place-items:center;color:#fff;font-size:9px;font-weight:800}
+.caption{display:flex;gap:2px}
+.caption span{width:34px;height:30px;display:grid;place-items:center;color:var(--faint);border-radius:6px;font-size:12px}
+.caption span:last-child:hover{background:#e81123;color:#fff}
+.caption span:hover{background:rgba(255,255,255,.06)}
+
+.app{display:grid;grid-template-columns:188px 1fr}
+.side{background:linear-gradient(180deg,#0e131b,#0a0d12);border-right:1px solid var(--line-soft);padding:14px 11px;min-height:520px}
+.side .brand2{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:700;font-size:15px;padding:4px 6px 16px}
+.side .brand2 .l{width:26px;height:26px;border-radius:7px;background:var(--grad);display:grid;place-items:center;color:#fff;font-size:13px}
+.nav2{display:flex;flex-direction:column;gap:3px}
+.nav2 div{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;font-size:13.5px;color:var(--dim);font-weight:500}
+.nav2 div.on{background:var(--elev);color:var(--text)}
+.nav2 .ic{width:15px;text-align:center;opacity:.8}
+.nav2 div.on .ic{color:var(--accent)}
+
+.screen{padding:18px 20px 22px;background:
+  radial-gradient(80% 50% at 100% 0,rgba(124,92,255,.07),transparent 60%),var(--bg2)}
+.scr-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.scr-top h3{font-family:var(--display);font-weight:600;font-size:17px}
+.scr-top p{font-size:12px;color:var(--faint)}
+.livechip{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px;border:1px solid var(--line);padding:5px 10px;border-radius:8px}
+.livechip i{width:7px;height:7px;border-radius:50%;background:var(--up);box-shadow:0 0 8px var(--up)}
+
+.kpis{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:11px;margin-bottom:14px}
+.kpi{background:var(--panel);border:1px solid var(--line-soft);border-radius:11px;padding:13px 15px}
+.kpi.hero{background:radial-gradient(120% 140% at 0 0,rgba(91,141,239,.14),transparent 55%),var(--panel)}
+.kpi .lab{font-size:11px;color:var(--dim);margin-bottom:7px;font-weight:500}
+.kpi .val{font-family:var(--mono);font-weight:700;font-size:22px;letter-spacing:-.01em}
+.kpi.hero .val{font-size:27px}
+.kpi .sm{font-size:13px}
+.pill{display:inline-block;font-family:var(--mono);font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:6px}
+.pill.up{background:rgba(52,211,153,.14)} .pill.down{background:rgba(248,113,113,.14)}
+
+.charts{display:grid;grid-template-columns:1.7fr 1fr;gap:11px}
+.card{background:var(--panel);border:1px solid var(--line-soft);border-radius:11px;padding:14px 16px}
+.card h4{font-size:12.5px;font-weight:600;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.card h4 .chips{display:flex;gap:5px}
+.card h4 .chips span{font-size:10.5px;color:var(--faint);border:1px solid var(--line);padding:2px 8px;border-radius:6px}
+.card h4 .chips span.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.area{width:100%;height:140px;display:block}
+.donut-wrap{display:flex;align-items:center;gap:14px}
+.donut{width:118px;height:118px;border-radius:50%;flex-shrink:0;position:relative;
+  background:conic-gradient(var(--accent) 0 61%,var(--accent2) 61% 80%,var(--up) 80% 92%,#f59e0b 92% 98%,#22d3ee 98% 100%)}
+.donut::after{content:"";position:absolute;inset:20px;border-radius:50%;background:var(--panel)}
+.legend{flex:1;display:flex;flex-direction:column;gap:7px;font-size:12px}
+.legend div{display:flex;align-items:center;gap:8px}
+.legend i{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.legend .pc{margin-left:auto;font-family:var(--mono);color:var(--dim)}
+
+/* ---------- Sections ---------- */
+section{padding:84px 0}
+.sec-head{text-align:center;max-width:680px;margin:0 auto 52px}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:14px}
+h2{font-family:var(--display);font-weight:700;letter-spacing:-.03em;font-size:clamp(30px,4.5vw,46px);line-height:1.05;margin-bottom:16px}
+.sec-head p{color:var(--dim);font-size:17px}
+
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.feat{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line-soft);
+  border-radius:16px;padding:26px;transition:.2s;position:relative;overflow:hidden}
+.feat:hover{transform:translateY(-4px);border-color:rgba(91,141,239,.4)}
+.feat .ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:22px;margin-bottom:18px;
+  background:rgba(91,141,239,.1);border:1px solid rgba(91,141,239,.22)}
+.feat h3{font-family:var(--display);font-weight:600;font-size:19px;margin-bottom:9px;letter-spacing:-.01em}
+.feat p{color:var(--dim);font-size:14.5px}
+
+/* Steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;counter-reset:s}
+.step{background:var(--panel);border:1px solid var(--line-soft);border-radius:16px;padding:28px 24px;position:relative;counter-increment:s}
+.step::before{content:counter(s);position:absolute;top:22px;right:24px;font-family:var(--display);font-weight:700;
+  font-size:46px;color:transparent;-webkit-text-stroke:1.5px var(--line);opacity:.8}
+.step .n{width:40px;height:40px;border-radius:11px;background:var(--grad);display:grid;place-items:center;
+  font-family:var(--mono);font-weight:700;color:#fff;margin-bottom:18px}
+.step h3{font-family:var(--display);font-weight:600;font-size:19px;margin-bottom:9px}
+.step p{color:var(--dim);font-size:14.5px}
+.step code{font-family:var(--mono);font-size:13px;background:var(--elev);padding:2px 7px;border-radius:5px;color:var(--accent)}
+
+.note{margin-top:30px;display:flex;gap:16px;align-items:flex-start;background:rgba(251,191,36,.07);
+  border:1px solid rgba(251,191,36,.25);border-radius:14px;padding:20px 22px;max-width:780px;margin-left:auto;margin-right:auto}
+.note .ic{font-size:22px;flex-shrink:0;filter:saturate(1.3)}
+.note h4{font-size:15px;margin-bottom:5px;color:var(--warn)}
+.note p{font-size:14px;color:var(--dim)}
+.note b{color:var(--text)}
+
+/* Final CTA */
+.final{text-align:center;background:
+  radial-gradient(60% 120% at 50% 0,rgba(124,92,255,.2),transparent 60%);
+  border:1px solid var(--line);border-radius:24px;padding:64px 30px;margin:30px 0 0;position:relative;overflow:hidden}
+.final h2{margin-bottom:14px}
+.final p{color:var(--dim);font-size:17px;margin-bottom:30px}
+
+footer{border-top:1px solid var(--line-soft);padding:38px 0;margin-top:90px;color:var(--faint);font-size:14px}
+.foot-in{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.foot-in a:hover{color:var(--text)}
+
+@media(max-width:860px){
+  .app{grid-template-columns:1fr}.side{display:none}
+  .kpis{grid-template-columns:1fr 1fr}.charts{grid-template-columns:1fr}
+  .features,.steps{grid-template-columns:1fr}
+  .nav-links a:not(.btn){display:none}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <div class="brand"><span class="logo">P</span> Portfolix</div>
+    <div class="nav-links">
+      <a href="#features">Funktionen</a>
+      <a href="#install">Installation</a>
+      <a href="https://github.com/simon23-12/portfolix" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn btn-primary sm" href="https://github.com/simon23-12/portfolix/releases/latest/download/Portfolix-Setup.exe">↓ Download</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow reveal d1"><span class="dot"></span> Windows 10 &amp; 11 · Kostenlos · Open Source</div>
+    <h1 class="reveal d2">Dein Depot.<br><span class="grad">Endlich glasklar.</span></h1>
+    <p class="sub reveal d3">Portfolix verwandelt deine Portfolio-Performance-Datei in ein elegantes Programm: alle Trades, Bestände und Konten auf einen Blick – mit <b style="color:var(--text)">Echtzeitkursen</b> und <b style="color:var(--text)">automatischen Sparplänen</b>.</p>
+    <div class="cta-row reveal d4">
+      <a class="btn btn-primary" href="https://github.com/simon23-12/portfolix/releases/latest/download/Portfolix-Setup.exe">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+        Für Windows herunterladen
+      </a>
+      <a class="btn btn-ghost" href="https://github.com/simon23-12/portfolix" target="_blank" rel="noopener">Quellcode ansehen</a>
+    </div>
+    <div class="dlmeta reveal d4">Installer ·  <span id="ver">neueste Version</span> · ~80 MB</div>
+
+    <!-- App-Vorschau im Windows-Fenster -->
+    <div class="showcase reveal d5">
+      <div class="win">
+        <div class="titlebar">
+          <div class="tb-left"><span class="mini">P</span> Portfolix</div>
+          <div class="caption"><span>&#9472;</span><span>&#9633;</span><span>&#10005;</span></div>
+        </div>
+        <div class="app">
+          <aside class="side">
+            <div class="brand2"><span class="l">P</span> Portfolix</div>
+            <div class="nav2">
+              <div class="on"><span class="ic">◧</span> Dashboard</div>
+              <div><span class="ic">◆</span> Wertpapiere</div>
+              <div><span class="ic">≡</span> Transaktionen</div>
+              <div><span class="ic">↻</span> Sparpläne</div>
+              <div><span class="ic">▤</span> Konten</div>
+            </div>
+          </aside>
+          <main class="screen">
+            <div class="scr-top">
+              <div><h3>Dashboard</h3><p>Überblick über dein Gesamtvermögen</p></div>
+              <div class="livechip"><i></i> Live-Kurse aktiv</div>
+            </div>
+            <div class="kpis">
+              <div class="kpi hero">
+                <div class="lab">Gesamtvermögen</div>
+                <div class="val">128.450,90 €</div>
+                <div class="pill up">+32.180 € · +33,4 %</div>
+              </div>
+              <div class="kpi">
+                <div class="lab">Eingezahlt</div>
+                <div class="val sm">96.270 €</div>
+              </div>
+              <div class="kpi">
+                <div class="lab">Heute</div>
+                <div class="val sm up">+842 €</div>
+                <div class="pill up">+0,66 %</div>
+              </div>
+            </div>
+            <div class="charts">
+              <div class="card">
+                <h4>Wertentwicklung <span class="chips"><span>1J</span><span>3J</span><span class="on">Alles</span></span></h4>
+                <svg class="area" viewBox="0 0 520 140" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#5b8def" stop-opacity=".42"/>
+                      <stop offset="1" stop-color="#5b8def" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,120 L30,116 L60,118 L90,104 L120,108 L150,92 L180,96 L210,78 L240,84 L270,64 L300,70 L330,52 L360,58 L390,40 L420,46 L450,30 L480,34 L520,18 L520,140 L0,140 Z" fill="url(#ag)"/>
+                  <path d="M0,120 L30,116 L60,118 L90,104 L120,108 L150,92 L180,96 L210,78 L240,84 L270,64 L300,70 L330,52 L360,58 L390,40 L420,46 L450,30 L480,34 L520,18" fill="none" stroke="#7aa2f0" stroke-width="2.2"/>
+                  <path d="M0,128 L520,128" stroke="#5d6878" stroke-width="1" stroke-dasharray="4 5" opacity=".5"/>
+                </svg>
+              </div>
+              <div class="card">
+                <h4>Aufteilung</h4>
+                <div class="donut-wrap">
+                  <div class="donut"></div>
+                  <div class="legend">
+                    <div><i style="background:#5b8def"></i> ETFs <span class="pc">61 %</span></div>
+                    <div><i style="background:#7c5cff"></i> Bitcoin <span class="pc">19 %</span></div>
+                    <div><i style="background:#34d399"></i> Aktien <span class="pc">12 %</span></div>
+                    <div><i style="background:#f59e0b"></i> Ethereum <span class="pc">6 %</span></div>
+                    <div><i style="background:#22d3ee"></i> Cash <span class="pc">2 %</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Funktionen</div>
+      <h2>Alles, was dein Portfolio braucht</h2>
+      <p>Liest direkt deine bestehende Portfolio-Performance-Datei – ohne Abtippen, ohne Cloud, komplett lokal.</p>
+    </div>
+    <div class="features">
+      <div class="feat"><div class="ico">📈</div><h3>Echtzeitkurse</h3><p>Live-Kurse von Yahoo Finance für ETFs, Aktien und Krypto – inklusive automatischer Währungsumrechnung nach Euro.</p></div>
+      <div class="feat"><div class="ico">↻</div><h3>Automatische Sparpläne</h3><p>Portfolix erkennt fällige Sparplan-Raten und bucht die Käufe automatisch zum passenden Kurs ein.</p></div>
+      <div class="feat"><div class="ico">◧</div><h3>Performance &amp; Charts</h3><p>Wertentwicklung über die Jahre, Gewinn/Verlust je Position und eine klare Aufteilung deines Vermögens.</p></div>
+      <div class="feat"><div class="ico">≡</div><h3>Alle Trades &amp; Konten</h3><p>Jeder Kauf, Verkauf, jede Dividende und Einzahlung – durchsuchbar und filterbar über alle Depots und Konten.</p></div>
+      <div class="feat"><div class="ico">🙈</div><h3>Privatsphäre-Modus</h3><p>Ein Klick (oder Strg+H) verpixelt alle Beträge – perfekt für Screenshots, ohne dein Vermögen zu zeigen.</p></div>
+      <div class="feat"><div class="ico">⬇</div><h3>Automatische Updates</h3><p>Einmal installieren, immer aktuell: neue Versionen laden sich im Hintergrund und installieren sich selbst.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="install" style="padding-top:20px">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">In 3 Schritten</div>
+      <h2>In zwei Minuten startklar</h2>
+      <p>Keine Vorkenntnisse nötig. Herunterladen, installieren, eigene Datei wählen – fertig.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Herunterladen</h3><p>Klick auf „Für Windows herunterladen". Du erhältst <code>Portfolix-Setup.exe</code>.</p></div>
+      <div class="step"><div class="n">2</div><h3>Installieren</h3><p>Datei doppelklicken und dem Installer folgen. Es sind keine Administrator-Rechte nötig.</p></div>
+      <div class="step"><div class="n">3</div><h3>Datei wählen</h3><p>Beim ersten Start deine <b>Portfolio-Performance-Datei</b> (<code>.xml</code>) auswählen – los geht's.</p></div>
+    </div>
+    <div class="note">
+      <div class="ic">🛡️</div>
+      <div>
+        <h4>Hinweis zur Windows-SmartScreen-Meldung</h4>
+        <p>Beim ersten Start zeigt Windows evtl. <b>„Der Computer wurde durch Windows geschützt"</b>. Das ist normal bei kostenloser Software ohne teures Zertifikat. Klick auf <b>„Weitere Informationen"</b> → <b>„Trotzdem ausführen"</b>. Deine Daten bleiben dabei komplett lokal auf deinem Rechner.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="final">
+      <h2>Bereit, dein Depot zu durchschauen?</h2>
+      <p>Kostenlos. Lokal. Ohne Anmeldung.</p>
+      <a class="btn btn-primary" href="https://github.com/simon23-12/portfolix/releases/latest/download/Portfolix-Setup.exe">↓ Portfolix für Windows herunterladen</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <div class="brand" style="font-size:16px"><span class="logo" style="width:28px;height:28px;font-size:15px">P</span> Portfolix</div>
+    <div style="display:flex;gap:24px">
+      <a href="https://github.com/simon23-12/portfolix" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/simon23-12/portfolix/releases" target="_blank" rel="noopener">Versionen</a>
+      <a href="#features">Funktionen</a>
+    </div>
+    <div>Mit ♥ für Privatanleger · Open Source</div>
+  </div>
+</footer>
+
+<script>
+// Aktuelle Versionsnummer live von GitHub holen (optional, scheitert lautlos)
+fetch('https://api.github.com/repos/simon23-12/portfolix/releases/latest')
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(d => { if (d && d.tag_name) document.getElementById('ver').textContent = 'Version ' + d.tag_name; })
+  .catch(() => {});
+</script>
+</body>
+</html>

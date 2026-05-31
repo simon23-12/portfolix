@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self';" />
+  <title>Portfolix</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="loading-screen" id="loading"><div class="spinner"></div></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">P</div>
+      <div class="name">Portfolix<small>Investment Tracker</small></div>
+    </div>
+
+    <div class="nav-item active" data-view="dashboard"><span class="ico">◧</span> Dashboard</div>
+    <div class="nav-item" data-view="securities"><span class="ico">◆</span> Wertpapiere</div>
+    <div class="nav-item" data-view="transactions"><span class="ico">≡</span> Transaktionen</div>
+    <div class="nav-item" data-view="plans"><span class="ico">↻</span> Sparpläne</div>
+    <div class="nav-item" data-view="accounts"><span class="ico">▤</span> Konten</div>
+
+    <div class="spacer"></div>
+
+    <button class="refresh-btn" id="refreshBtn"><span class="ico">⟳</span> Kurse aktualisieren</button>
+    <div class="side-foot">
+      <div id="lastUpdate">Noch nicht aktualisiert</div>
+      <div class="path" id="dataPath"></div>
+      <div style="margin-top:6px"><a href="#" id="changeFile" style="color:var(--accent); text-decoration:none">Andere Datei…</a></div>
+      <div style="margin-top:8px;opacity:.7" id="appVersion"></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="update-bar" id="updateBar" hidden>
+      <span id="updateMsg"></span>
+      <span class="update-actions">
+        <button class="btn sm primary" id="updateInstall" hidden>Jetzt neu starten &amp; aktualisieren</button>
+        <button class="btn sm" id="updateDismiss">Ausblenden</button>
+      </span>
+    </div>
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">Dashboard</h1>
+        <div class="sub" id="pageSub">Überblick über dein Gesamtvermögen</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="btn sm" id="privacyToggle" title="Beträge für Screenshots verbergen (Strg+H)"><span id="privacyIco">🙈</span> <span id="privacyLbl">Zahlen verbergen</span></button>
+        <div class="live-dot" id="liveDot"><b></b> <span>Kurse: lokal gespeichert</span></div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Dashboard -->
+      <section class="view active" id="view-dashboard">
+        <div class="kpi-grid" id="kpiGrid"></div>
+        <div class="grid-2">
+          <div class="panel">
+            <h2>Wertentwicklung
+              <div class="actions" id="rangeChips">
+                <span class="chip" data-range="12">1J</span>
+                <span class="chip" data-range="36">3J</span>
+                <span class="chip active" data-range="0">Alles</span>
+              </div>
+            </h2>
+            <div class="chart-wrap"><canvas id="equityChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <h2>Aufteilung</h2>
+            <div class="chart-wrap sm"><canvas id="allocChart"></canvas></div>
+            <div id="allocLegend"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Positionen</h2>
+          <div id="dashPositions"></div>
+        </div>
+      </section>
+
+      <!-- Securities -->
+      <section class="view" id="view-securities">
+        <div class="panel">
+          <h2>Bestände &amp; Echtzeitkurse</h2>
+          <div id="securitiesTable"></div>
+        </div>
+        <div class="panel">
+          <h2>Kursquellen (Yahoo-Finance-Symbole)
+            <button class="btn sm" id="applySymbols">Übernehmen &amp; neu laden</button>
+          </h2>
+          <div class="muted" style="font-size:12px;margin-bottom:12px">Passe das Yahoo-Symbol an, falls kein Live-Kurs geladen wird. Beispiele: <code>VWCE.DE</code>, <code>TSLA</code>, <code>BTC-EUR</code>, <code>ANIC.L</code>. Leeres Feld = kein Live-Kurs (letzter gespeicherter Kurs wird genutzt).</div>
+          <div id="symbolEditors"></div>
+        </div>
+      </section>
+
+      <!-- Transactions -->
+      <section class="view" id="view-transactions">
+        <div class="toolbar">
+          <input type="search" id="txSearch" placeholder="Suche (Wertpapier, Konto)…" />
+          <select id="txType"><option value="">Alle Typen</option></select>
+          <select id="txScope"><option value="">Konten &amp; Depots</option><option value="Depot">Nur Depot</option><option value="Konto">Nur Konto</option></select>
+          <span class="muted" id="txCount"></span>
+        </div>
+        <div class="panel" style="padding:6px 8px"><div id="txTable"></div></div>
+      </section>
+
+      <!-- Plans -->
+      <section class="view" id="view-plans">
+        <div id="plansContainer"></div>
+      </section>
+
+      <!-- Accounts -->
+      <section class="view" id="view-accounts">
+        <div class="panel">
+          <h2>Konten &amp; Depots</h2>
+          <div id="accountsTable"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <script src="vendor/chart.umd.js"></script>
+  <script src="ppparser.js"></script>
+  <script src="model.js"></script>
+  <script src="savingsplan.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

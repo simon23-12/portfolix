@@ -1,0 +1,8 @@
+# Abhängigkeiten & Build-Ausgaben
+node_modules/
+dist/
+*.log
+
+# Persönliche Daten NICHT ins (ggf. öffentliche) Repository committen!
+MyInvestments.xml
+*.portfolio
