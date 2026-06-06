@@ -187,7 +187,21 @@ async function run() {
   ok($('#addBtn') && !$('#addBtn').hidden, 'Nach „Öffnen" wieder im nativen Modus');
   ok(!$('#portfolioActions').hidden, '„+ Neu / Öffnen"-Leiste sichtbar');
 
-  console.log('\n[15] Laufzeitfehler (Exceptions/Rejections im DOM)');
+  console.log('\n[15] Buttons feuern über echten DOM-Klick (CSP-sicher, kein inline onclick)');
+  // Inline onclick wird von der CSP (script-src 'self') blockiert -> alle Buttons müssen
+  // über data-act + Event-Delegation laufen. Hier echten Klick statt Direktaufruf testen.
+  ok(!/\son\w+\s*=\s*["']/.test(doc.body.innerHTML), 'Kein inline-Event-Handler im gerenderten DOM');
+  win.switchView('transactions'); await tick();
+  const addTxBtn = $('#txAddBtn');
+  ok(addTxBtn && !addTxBtn.hidden && addTxBtn.dataset.act === 'add', '„+ Buchung" nutzt data-act (kein onclick)');
+  click(addTxBtn); await tick();
+  ok(form(), 'Echter Klick auf „+ Buchung" öffnet das Buchungs-Modal');
+  const cancel = doc.querySelector('[data-act="close"]');
+  ok(cancel, '„Abbrechen" nutzt data-act="close"');
+  click(cancel); await tick();
+  ok(!form(), 'Echter Klick auf „Abbrechen" schließt das Modal');
+
+  console.log('\n[16] Laufzeitfehler (Exceptions/Rejections im DOM)');
   ok(errors.length === 0, errors.length === 0 ? 'Keine Laufzeitfehler' : (errors.length + ' Fehler: ' + errors.slice(0, 5).join(' | ')));
 
   console.log(`\n==== Ergebnis: ${pass} bestanden, ${fail} fehlgeschlagen ====`);

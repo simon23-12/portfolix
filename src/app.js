@@ -552,12 +552,12 @@ function emptyState(emoji, title, text, kind, btn) {
   return `<div class="empty"><div style="font-size:34px;margin-bottom:10px">${emoji}</div>
     <div style="font-size:16px;color:var(--text);font-weight:600;margin-bottom:6px">${esc(title)}</div>
     <div style="max-width:400px;margin:0 auto 16px">${esc(text)}</div>
-    ${State.mode === 'native' && kind ? `<button class="btn primary" onclick="openAdd('${kind}')">${esc(btn)}</button>` : ''}</div>`;
+    ${State.mode === 'native' && kind ? `<button class="btn primary" data-act="add" data-kind="${kind}">${esc(btn)}</button>` : ''}</div>`;
 }
 function addToolbar(buttons) {
   if (State.mode !== 'native') return '';
   return `<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">${
-    buttons.map(b => `<button class="btn sm ${b.primary ? 'primary' : ''}" onclick="openAdd('${b.kind}')">${esc(b.label)}</button>`).join('')}</div>`;
+    buttons.map(b => `<button class="btn sm ${b.primary ? 'primary' : ''}" data-act="add" data-kind="${b.kind}">${esc(b.label)}</button>`).join('')}</div>`;
 }
 
 function renderDashPositions() {
@@ -677,7 +677,7 @@ function applyTxFilter() {
       <td style="text-align:left" class="muted">${esc(t.container)}</td>
       ${editable ? `<td class="row-actions nowrap">${t._generated
         ? '<span class="muted" style="font-size:11px" title="Automatisch durch Sparplan gebucht">auto</span>'
-        : `<button class="iconbtn" title="Bearbeiten" onclick="editTxRow('${t.uuid}')">✎</button><button class="iconbtn del" title="Löschen" onclick="deleteTxRow('${t.uuid}','${t.group || ''}')">🗑</button>`}</td>` : ''}
+        : `<button class="iconbtn" title="Bearbeiten" data-act="editTx" data-uuid="${t.uuid}">✎</button><button class="iconbtn del" title="Löschen" data-act="delTx" data-uuid="${t.uuid}" data-group="${t.group || ''}">🗑</button>`}</td>` : ''}
     </tr>`).join('')}
     </tbody></table>${rows.length > 800 ? `<div class="empty">… ${rows.length - 800} weitere ausgeblendet (Filter nutzen)</div>` : ''}`;
 }
@@ -793,7 +793,7 @@ function modalAddAsset() {
       <input name="symbol" placeholder="z.B. AAPL, VWCE.DE, BTC-EUR"><div class="hint" id="symHint"></div></div>
     <div class="hint" id="manualHint" style="display:none">Manuell bewertetes Asset – den Wert trägst du danach als Buchung „Wertanpassung" ein.</div>
     <div class="modal-foot">
-      <button type="button" class="btn" onclick="closeModal()">Abbrechen</button>
+      <button type="button" class="btn" data-act="close">Abbrechen</button>
       <button type="submit" class="btn primary">Anlegen &amp; Buchung erfassen</button>
     </div>`, {
     onReady(form) {
@@ -835,7 +835,7 @@ function modalAddTx(opts = {}) {
     </div></div>
     <div id="txBody"></div>
     <div class="modal-foot">
-      <button type="button" class="btn" onclick="closeModal()">Abbrechen</button>
+      <button type="button" class="btn" data-act="close">Abbrechen</button>
       <button type="submit" class="btn primary">${opts.replace ? 'Speichern' : 'Buchen'}</button>
     </div>`, {
     onReady(form) {
@@ -1002,7 +1002,7 @@ function modalAddPlan() {
     <div class="field field-check"><input type="checkbox" name="auto" id="auto" checked><label for="auto" style="font-weight:500">Fällige Raten automatisch buchen</label></div>
     <div class="hint">Portfolix bucht beim Aktualisieren alle seit dem Start fälligen Raten rückwirkend zum jeweiligen Kurs.</div>
     <div class="modal-foot">
-      <button type="button" class="btn" onclick="closeModal()">Abbrechen</button>
+      <button type="button" class="btn" data-act="close">Abbrechen</button>
       <button type="submit" class="btn primary">Sparplan anlegen</button>
     </div>`, {
     onSubmit(form) {
@@ -1027,7 +1027,7 @@ function modalAddAccount() {
       <div class="field"><label>Währung</label><input name="currency" value="EUR"></div>
     </div>
     <div class="modal-foot">
-      <button type="button" class="btn" onclick="closeModal()">Abbrechen</button>
+      <button type="button" class="btn" data-act="close">Abbrechen</button>
       <button type="submit" class="btn primary">Konto anlegen</button>
     </div>`, {
     onSubmit(form) {
@@ -1060,6 +1060,18 @@ function switchView(name) {
   document.getElementById('pageSub').textContent = VIEW_META[name][1];
   if (name === 'dashboard') { renderEquity(); renderAlloc(); }
 }
+
+// Zentrale Event-Delegation für dynamisch erzeugte Buttons (CSP blockt inline onclick)
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  switch (el.dataset.act) {
+    case 'add': openAdd(el.dataset.kind); break;
+    case 'editTx': editTxRow(el.dataset.uuid); break;
+    case 'delTx': deleteTxRow(el.dataset.uuid, el.dataset.group); break;
+    case 'close': closeModal(); break;
+  }
+});
 
 document.querySelectorAll('.nav-item').forEach(n => n.addEventListener('click', () => switchView(n.dataset.view)));
 document.getElementById('refreshBtn').addEventListener('click', refreshQuotes);
